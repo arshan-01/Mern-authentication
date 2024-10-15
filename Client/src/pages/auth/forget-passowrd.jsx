@@ -21,7 +21,7 @@ const ForgotPassword = () => {
         <div className="antialiased bg-slate-200 min-h-screen flex items-center justify-center">
             <div className="w-140 max-w-lg mx-auto my-5 bg-white p-6 rounded-xl shadow shadow-slate-300"> {/* Reduced padding and margin */}
                 <div className="heading_s1 text-center">
-                    <h1 className="mb-10 font-weight-900 text-2xl text-primary"> {/* Reduced margin */}
+                    <h1 className="mb-4 font-weight-900 text-2xl text-primary"> {/* Reduced margin */}
                         {forgetPassword.title}
                     </h1>
                 </div>

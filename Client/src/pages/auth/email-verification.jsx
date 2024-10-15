@@ -7,8 +7,6 @@ function EmailVerification() {
     const [status, setStatus] = useState('loading'); // 'loading', 'success', 'failure', 'alreadyVerified', 'noToken'
     const dispatch = useDispatch();
     const { token, id } = useParams();
-    console.log("🚀 ~ file: email-verification.jsx ~ line 10 ~ EmailVerification ~ token", token)
-    console.log("🚀 ~ file: email-verification.jsx ~ line 11 ~ EmailVerification ~ id", id)
     useEffect(() => {
         if (!token || !id) {
             setStatus('noToken'); // No token available
@@ -20,7 +18,6 @@ function EmailVerification() {
 
             try {
                 const result = await dispatch(verifyEmail({ token, id }));
-                console.log("🚀 ~ verify ~ result:", result)
 
                 const resultStatus = result.payload.status; // Store status in a variable for readability
 
@@ -141,7 +138,7 @@ function EmailVerification() {
 
                         {status === 'failure' && (
                             <div className="mt-4 text-center">
-                                <Link to="/contact-support" className="text-sm text-gray-500 hover:underline">
+                                <Link to="/contact-support" className="text-sm text-primary hover:text-primary-light hover:underline">
                                     Contact Support
                                 </Link>
                             </div>

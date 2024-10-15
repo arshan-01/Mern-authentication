@@ -105,7 +105,6 @@ const authSlice = createSlice({
         state.successMessage = 'Email verified successfully!';
       })
       .addCase(verifyEmail.rejected, (state, action) => {
-        console.log('🚀 ~ verifyEmail.rejected ~ action', action);
         state.loading = false;
         state.error = action.payload;
       })

@@ -29,7 +29,7 @@ const Login = () => {
         <div className="antialiased bg-slate-200 min-h-screen flex items-center justify-center">
             <div className="w-140 max-w-lg mx-auto my-6 bg-white p-6 rounded-xl shadow shadow-slate-300"> {/* Reduced margin and padding */}
                 <div className="heading_s1 text-center">
-                    <h1 className="mb-4 font-weight-900 text-xl text-primary"> {/* Reduced font size and margin */}
+                    <h1 className="mb-4 font-weight-900 font-bold text-xl text-primary"> {/* Reduced font size and margin */}
                         {login.title}
                     </h1>
                 </div>
@@ -82,7 +82,7 @@ const Login = () => {
                                 </label>
                             </div>
                             <div>
-                                <Link to={login.forgotPasswordLink} className="custom-link font-medium">
+                                <Link to={login.forgotPasswordLink} className="text-primary hover:text-primary-light font-medium">
                                     {login.forgotPassword}
                                 </Link>
                             </div>
@@ -105,12 +105,12 @@ const Login = () => {
 
                         <p className="text-center text-sm"> {/* Reduced text size */}
                             {login.footer}{' '}
-                            <Link to={login.footerLink} className="custom-link font-medium inline-flex space-x-1 items-center">
+                            <Link to={login.footerLink} className="text-primary hover:text-primary-light font-medium inline-flex space-x-1 items-center">
                                 <span>{login.footerText}</span>
                                 <span>
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
-                                        className="h-4 w-4 custom-link"
+                                        className="h-4 w-4 text-primary hover:text-primary-light"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"

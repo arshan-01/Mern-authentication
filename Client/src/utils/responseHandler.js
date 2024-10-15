@@ -23,7 +23,6 @@ const handleResponse = async (request, options = {}, rejectWithValue) => {
 
         return response.data; // Return the expected data
     } catch (error) {
-        console.log("🚀 ~ handleResponse ~ error:", error);
         
         // Conditionally display error toast
         if (showErrorToast) {

@@ -52,12 +52,12 @@ const Register = () => {
         <div className="antialiased bg-slate-200 min-h-screen flex items-center justify-center">
             <div className="w-140 max-w-lg mx-auto my-5 bg-white p-6 rounded-xl shadow shadow-slate-300">
                 <div className="heading_s1 text-center">
-                    <h1 className="mb-10 font-weight-900 text-2xl text-primary">
+                    <h1 className="mb-4 font-weight-900 font-bold text-2xl text-primary">
                         Create an account 🚀
                     </h1>
                 </div>
                 <div className="heading_s1 text-center text-md text-gray-5">
-                    <p className="mb-20">Please input your details to create an account</p>
+                    <p className="mb-4">Please input your details to create an account</p>
                 </div>
                 <form onSubmit={formik.handleSubmit} className="my-6">
                     <div className="flex flex-col space-y-4">
@@ -152,12 +152,12 @@ const Register = () => {
                         {/* Login Link */}
                         <p className="text-center">
                             Already have an account?{' '}
-                            <Link to="/enter" className="custom-link font-medium inline-flex space-x-1 items-center">
+                            <Link to="/enter" className="text-primary hover:text-primary-light font-medium inline-flex space-x-1 items-center">
                                 <span>Log in</span>
                                 <span>
                                     <svg
                                         xmlns="http://www.w3.org/2000/svg"
-                                        className="h-4 w-4 custom-link"
+                                        className="h-4 w-4 text-primary hover:text-primary-light"
                                         fill="none"
                                         viewBox="0 0 24 24"
                                         stroke="currentColor"
