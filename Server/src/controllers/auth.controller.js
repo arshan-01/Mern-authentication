@@ -26,7 +26,7 @@ export const RegisterUser = asyncHandler(async (req, res, next) => {
   // Check if the user already exists
   const userExist = await User.findOne({ email });
   if (userExist) {
-    return next(new ApiError(400, 'User already exists'));
+    throw new ApiError(400, 'User already exists');
   }
 
   // Create a new user (password is hashed in the schema's pre-save hook)
@@ -48,17 +48,17 @@ export const LoginUser = asyncHandler(async (req, res, next) => {
   // Find user by email
   const user = await User.findOne({ email });
   if (!user) {
-    return next(new ApiError(400, 'Invalid credentials'));
+    throw new ApiError(400, 'Invalid credentials');
   }
   // Check if the user is verified
   if (!user.isVerified) {
     sendVerificationEmail(user);
-    return next(new ApiError(400, 'Your email is not verified. Please verify your email to login.'));
+    throw new ApiError(400, 'Your email is not verified. Please verify your email to login.');
   }
 
   // Check password validity
   if (!(await user.comparePassword(password))) {
-    return next(new ApiError(400, 'Invalid credentials'));
+    throw new ApiError(400, 'Invalid credentials');
   }
 
   // Generate tokens
@@ -88,7 +88,7 @@ export const LoginUser = asyncHandler(async (req, res, next) => {
   // Return user info without sensitive fields
   const { password: _, _id: __, ...userWithoutSensitiveInfo } = user._doc;
 
-  res.json(new ApiResponse(200, userWithoutSensitiveInfo, 'Login successful'));
+  res.status(200).json(new ApiResponse(200, { user: userWithoutSensitiveInfo }, 'Login successful'));
 });
 
 // Reset Password Link API
@@ -104,7 +104,7 @@ export const resetPasswordLink = asyncHandler(async (req, res) => {
 
  // Check if user exists and is not deleted
  if (!user || user.isDeleted) {
-  return next(new ApiError(404, 'User not found'));
+  throw new ApiError(404, 'User not found');
 }
   // Generate a reset token
   const resetToken = crypto.randomBytes(32).toString('hex');
@@ -123,7 +123,7 @@ export const resetPasswordLink = asyncHandler(async (req, res) => {
   });
 
   // Return the success message
-  res.json(new ApiResponse (200, null, 'Password reset link sent successfully'));
+  res.status(200).json(new ApiResponse(200, null, 'Password reset link sent successfully'));
 });
 
 // Reset Password API
@@ -136,7 +136,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   const user = await User.findOne({ resetPasswordToken : resetToken, resetPasswordTokenExpires: { $gt: Date.now() } });
 
   if (!user) {
-    return next(new ApiError(400, 'Invalid or expired reset token'));
+    throw new ApiError(400, 'Invalid or expired reset token');
   }
 
   // Update the user's password and clear the reset token
@@ -146,7 +146,7 @@ export const resetPassword = asyncHandler(async (req, res) => {
   await user.save();
 
   // Return the password reset success HTML template
-  res.json(new ApiResponse(200, null, 'Password reset successful'));
+  res.status(200).json(new ApiResponse(200, null, 'Password reset successful'));
 });
 
 // Update Password
@@ -159,13 +159,13 @@ export const UpdatePassword = asyncHandler(async (req, res, next) => {
   // Find the user by their ID
   const user = await User.findById(req.user.id);
   if (!user) {
-    return next(new ApiError(404, 'User not found'));
+    throw new ApiError(404, 'User not found');
   }
 
   // Check if the current password is valid
   const isMatch = await user.comparePassword(currentPassword);
   if (!isMatch) {
-    return next(new ApiError(400, 'Current password is incorrect'));
+    throw new ApiError(400, 'Current password is incorrect');
   }
 
   // Update the user's password
@@ -214,26 +214,17 @@ export const ResendVerificationEmail = asyncHandler(async (req, res, next) => {
   // Find user by decrypted ID
   const user = await User.findById(userId);
   if (!user) {
-    return res.status(404).json({
-      success: false,
-      message: 'User not found.'
-    });
+    throw new ApiError(404, 'User not found');
   }
 
   if (user.isVerified) {
-    return res.status(400).json({
-      success: false,
-      message: 'This email has already been verified.'
-    });
+    throw new ApiError(400, 'Email is already verified');
   }
 
   // Resend verification email
   await sendVerificationEmail(user);
 
-  res.status(200).json({
-    success: true,
-    message: 'Verification email resent.'
-  });
+  res.status(200).json( new ApiResponse(200, null, 'Verification email sent successfully. Please check your inbox.'))
 });
 
 // Email Verification
@@ -242,11 +233,7 @@ export const VerifyEmail = asyncHandler(async (req, res, next) => {
   const { id: encryptedId } = req.query; // Extract encrypted user ID from query
 
   if (!token || !encryptedId) {
-    return res.status(400).json({ 
-      success: false,
-      status: emailVerificationStatus.invalidToken,
-      message: 'No verification token or ID provided.'
-    });
+    throw new ApiError(400, 'Invalid verification token');
   }
 
   // Decrypt the user ID
@@ -260,20 +247,12 @@ export const VerifyEmail = asyncHandler(async (req, res, next) => {
   });
 
   if (!user) {
-    return res.status(400).json({ 
-      success: false,
-      status: emailVerificationStatus.invalidToken,
-      message: 'The verification token is invalid or has expired.'
-    });
+    throw new ApiError(400, 'Invalid or expired verification token');
   }
 
   // Check if the user is already verified
   if (user.isVerified) {
-    return res.status(400).json({
-      success: false,
-      status: emailVerificationStatus.alreadyVerified,
-      message: 'This email has already been verified.'
-    });
+    throw new ApiError(400, 'Email is already verified');
   }
 
   // Mark user as verified
@@ -282,11 +261,8 @@ export const VerifyEmail = asyncHandler(async (req, res, next) => {
   user.emailVerificationTokenExpires = undefined; // Clear the expiration time
   await user.save();
 
-  res.status(200).json({
-    success: true, 
-    status: emailVerificationStatus.success,
-    message: 'Email verification successful.'
-  });
+  // Return the success message
+  res.status(200).json(new ApiResponse(200, null, 'Email verified successfully'));
 });
 
 
@@ -308,7 +284,7 @@ export const RefreshUserToken = asyncHandler(async (req, res, next) => {
   const { refreshToken } = req.cookies;
 
   if (!refreshToken) {
-    return next(new ApiError(401, 'No refresh token provided'));
+    throw new ApiError(401, 'No refresh token provided');
   }
 
   try {
@@ -316,7 +292,7 @@ export const RefreshUserToken = asyncHandler(async (req, res, next) => {
     const tokenInDb = await RefreshToken.findOne({ token: refreshToken });
 
     if (!tokenInDb || tokenInDb.userId.toString() !== decoded.id) {
-      return next(new ApiError(401, 'Invalid refresh token'));
+      throw new ApiError(401, 'Invalid refresh token');
     }
 
     // Generate new access token
@@ -329,8 +305,8 @@ export const RefreshUserToken = asyncHandler(async (req, res, next) => {
       sameSite: 'Strict',
     });
 
-    res.json(new ApiResponse(200, { accessToken }, 'Token refreshed successfully'));
+    res.status(200).json(new ApiResponse(200, null, 'Token refreshed successfully'));
   } catch (error) {
-    return next(new ApiError(401, 'Invalid or expired refresh token'));
+    throw new ApiError(401, 'Invalid or expired refresh token');
   }
 });
