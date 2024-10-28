@@ -1,5 +1,7 @@
 import Joi from 'joi';
 
+const phoneRegex = /^\s*(?:\+?(\d{1,3}))?[-. (]*(\d{3})[-. )]*(\d{3})[-. ]*(\d{4})(?: *x(\d+))?\s*$/
+
 // Register User Validation
 export const registerUser = Joi.object({
     fullName: Joi.string().required().messages({
@@ -24,6 +26,14 @@ export const registerUser = Joi.object({
             'string.email': 'Email must be a valid email address.',
             'any.required': 'Email is required.',
         }),
+    phone: Joi.string()
+        .regex(phoneRegex)
+        .required()
+        .messages({
+            'string.empty': 'Phone number is required.',
+            'string.pattern.base': 'Phone number must be a valid phone number.',
+            'any.required': 'Phone number is required.',
+        }),
     password: Joi.string()
         .min(6)
         .max(30)
@@ -34,15 +44,8 @@ export const registerUser = Joi.object({
             'string.max': 'Password must be at most 30 characters long.',
             'any.required': 'Password is required.',
         }),
-    isDeleted: Joi.boolean(),
-    isVerified: Joi.boolean(),
-    accessToken: Joi.string().allow(null, ''),
-    resetPasswordToken: Joi.string().allow(null, ''),
-    resetPasswordTokenExpires: Joi.date().allow(null),
-    emailVerificationToken: Joi.string().allow(null, ''),
-    emailVerificationTokenExpires: Joi.date().allow(null),
-    joinedAt: Joi.date().default(() => new Date()), // Automatically set to current date if not provided
-});
+        
+    });
 
 // Login Validation
 export const loginUser = Joi.object({
@@ -76,7 +79,7 @@ export const resetPasswordEmail = Joi.object({
 
 // Password Reset Validation
 export const ResetPassword = Joi.object({
-    resettoken: Joi.string()
+    resetToken: Joi.string()
     .required()
     .messages({ 
                 'string.empty': 'A valid reset token is required to proceed with password recovery.', 
