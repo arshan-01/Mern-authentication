@@ -177,32 +177,26 @@ export const UpdatePassword = asyncHandler(async (req, res, next) => {
 });
 
 // Send Verification Email
-export const sendVerificationEmail = async (user) => {
-  try {
-    // Generate the verification token
-    const emailVerifyToken = crypto.randomBytes(32).toString('hex');
-    const encryptedUserId = encryptUserId(user._id.toString()); // Encrypt user ID
-    const emailVerifyLink = `${CLIENT_URL}/enter/verify-email/${emailVerifyToken}/${encryptedUserId}`; // Attach encrypted ID
+export const sendVerificationEmail = asyncHandler(async (user) => {
+  // Generate the verification token
+  const emailVerifyToken = crypto.randomBytes(32).toString('hex');
+  const encryptedUserId = encryptUserId(user._id.toString()); // Encrypt user ID
+  const emailVerifyLink = `${CLIENT_URL}/enter/verify-email/${emailVerifyToken}/${encryptedUserId}`; // Attach encrypted ID
 
-    // Store the verification token and its expiry time in the user document
-    user.emailVerificationToken = emailVerifyToken;
-    user.emailVerificationTokenExpires = Date.now() + 3600000; // 1-hour expiration
+  // Store the verification token and its expiry time in the user document
+  user.emailVerificationToken = emailVerifyToken;
+  user.emailVerificationTokenExpires = Date.now() + 3600000; // 1-hour expiration
 
-    // Save the user document
-    await user.save();
+  // Save the user document
+  await user.save();
 
-    // Send the verification email
-    await sendEmail({
-      to: user.email,
-      subject: 'Email Verification',
-      html: EMAIL_VERIFICATION_TEMPLATE().replace('{verificationLink}', emailVerifyLink) // Use the HTML template
-    });
-
-  } catch (error) {
-    console.error('Error sending verification email:', error);
-    throw new Error('Could not send verification email. Please try again later.');
-  }
-};
+  // Send the verification email
+  await sendEmail({
+    to: user.email,
+    subject: 'Email Verification',
+    html: EMAIL_VERIFICATION_TEMPLATE().replace('{verificationLink}', emailVerifyLink) // Use the HTML template
+  });
+});
 
 // Resend Verification Email 
 export const ResendVerificationEmail = asyncHandler(async (req, res, next) => {
