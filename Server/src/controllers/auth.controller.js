@@ -36,7 +36,7 @@ export const RegisterUser = asyncHandler(async (req, res, next) => {
   // Send verification email
   await sendVerificationEmail(user);
 
-  res.status(201).json(new ApiResponse(201, user, 'User created successfully. Please verify your email.'));
+  res.status(201).json(new ApiResponse(201, null, 'User created successfully. Please verify your email.'));
 });
 
 // User Login
@@ -49,6 +49,11 @@ export const LoginUser = asyncHandler(async (req, res, next) => {
   const user = await User.findOne({ email });
   if (!user) {
     return next(new ApiError(400, 'Invalid credentials'));
+  }
+  // Check if the user is verified
+  if (!user.isVerified) {
+    sendVerificationEmail(user);
+    return next(new ApiError(400, 'Your email is not verified. Please verify your email to login.'));
   }
 
   // Check password validity
@@ -97,10 +102,10 @@ export const resetPasswordLink = asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ email });
 
-  if (!user || user.isDeleted) {
-    return res.status(404).json({ message: 'User not found' });
-  }
-
+ // Check if user exists and is not deleted
+ if (!user || user.isDeleted) {
+  return next(new ApiError(404, 'User not found'));
+}
   // Generate a reset token
   const resetToken = crypto.randomBytes(32).toString('hex');
   const resetLink = `${CLIENT_URL}/enter/reset-password/${resetToken}`;
@@ -117,42 +122,31 @@ export const resetPasswordLink = asyncHandler(async (req, res) => {
     html: PASSWORD_RESET_REQUEST_TEMPLATE().replace('{resetURL}', resetLink) // Use the HTML template
   });
 
-  return res.status(200).json({ message: 'Password reset link sent successfully' });
+  // Return the success message
+  res.json(new ApiResponse (200, null, 'Password reset link sent successfully'));
 });
 
 // Reset Password API
 export const resetPassword = asyncHandler(async (req, res) => {
   // Validate request data
   await ResetPassword.validateAsync(req.body);
-  let { resetToken, password, confirmPassword } = req.body;
-
-  if (!resetToken || !password || !confirmPassword) {
-    return res.status(400).json({ message: 'All fields are required' });
-  }
-
-  if (password !== confirmPassword) {
-    return res.status(400).json({ message: 'Passwords do not match' });
-  }
+  let { resetToken, password } = req.body;
 
   // Find the user with the reset token and check if it's expired
   const user = await User.findOne({ resetPasswordToken : resetToken, resetPasswordTokenExpires: { $gt: Date.now() } });
 
   if (!user) {
-    return res.status(400).json({ message: 'Invalid or expired reset token' });
+    return next(new ApiError(400, 'Invalid or expired reset token'));
   }
 
-  // Hash the new password
-  const salt = await bcrypt.genSalt(10);
-  const hashPassword = await bcrypt.hash(password, salt);
-
   // Update the user's password and clear the reset token
-  user.password = hashPassword;
+  user.password = password; // Password will be hashed via schema pre-save hook
   user.resetPasswordToken = undefined;
   user.resetPasswordTokenExpires = undefined;
   await user.save();
 
   // Return the password reset success HTML template
-  res.status(200).json({ message: 'Password reset successful' });
+  res.json(new ApiResponse(200, null, 'Password reset successful'));
 });
 
 // Update Password
